@@ -55,3 +55,10 @@ bool DatabaseAccess::open()
 
     return true;
 }
+
+void DatabaseAccess::close()
+{
+    sqlite3_close(this->_db);
+    this->_db = nullptr;
+}
+
