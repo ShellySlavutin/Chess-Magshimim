@@ -77,6 +77,9 @@
     <ClCompile Include="sqlite3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DatabaseAccess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Gallery.VC.db" />
