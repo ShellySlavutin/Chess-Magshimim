@@ -14,35 +14,10 @@ bool DatabaseAccess::open()
     }
     if (file_exist != 0) {
         const char* sqlStatement =
-            "CREATE TABLE IF NOT EXISTS Users ("
-            "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
-            "NAME TEXT"
-            ");"
-
-            "CREATE TABLE IF NOT EXISTS Albums ("
-            "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
-            "NAME TEXT, "
-            "CREATION_DATE DATE, "
-            "USER_ID INTEGER, "
-            "FOREIGN KEY(USER_ID) REFERENCES Users(ID)"
-            ");"
-
-            "CREATE TABLE IF NOT EXISTS Pictures ("
-            "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
-            "NAME TEXT, "
-            "LOCATION TEXT, "
-            "CREATION_DATE DATE, "
-            "ALBUM_ID INTEGER, "
-            "FOREIGN KEY(ALBUM_ID) REFERENCES Albums(ID)"
-            ");"
-
-            "CREATE TABLE IF NOT EXISTS Tags ("
-            "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
-            "PICTURE_ID INTEGER, "
-            "USER_ID INTEGER, "
-            "FOREIGN KEY(PICTURE_ID) REFERENCES Pictures(ID), "
-            "FOREIGN KEY(USER_ID) REFERENCES Users(ID)"
-            ");";
+            "CREATE TABLE USERS (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL); "
+            "CREATE TABLE ALBUMS (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL, USER_ID INTEGER NOT NULL, CREATION_DATE TEXT NOT NULL, FOREIGN KEY(USER_ID) REFERENCES USERS(ID)); "
+            "CREATE TABLE PICTURES (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL, LOCATION TEXT NOT NULL, CREATION_DATE TEXT NOT NULL, ALBUM_ID INTEGER NOT NULL, FOREIGN KEY(ALBUM_ID) REFERENCES ALBUMS(ID)); "
+            "CREATE TABLE TAGS (PICTURE_ID INTEGER NOT NULL, USER_ID INTEGER NOT NULL, PRIMARY KEY(PICTURE_ID, USER_ID), FOREIGN KEY(PICTURE_ID) REFERENCES PICTURES(ID), FOREIGN KEY(USER_ID) REFERENCES USERS(ID));";
 
         char* errMessage = nullptr;
         res = sqlite3_exec(this->_db, sqlStatement, nullptr, nullptr, &errMessage);
@@ -62,3 +37,8 @@ void DatabaseAccess::close()
     this->_db = nullptr;
 }
 
+void DatabaseAccess::clear()
+{
+    this->db_albums.clear();
+    this->db_users.clear();
+}
