@@ -39,6 +39,65 @@ void DatabaseAccess::close()
 
 void DatabaseAccess::clear()
 {
-    this->db_albums.clear();
-    this->db_users.clear();
+
+}
+
+void DatabaseAccess::deleteAlbum(const std::string& albumName, int userId)
+{
+    std::string deleteAlbumStatement =
+        "DELETE FROM ALBUMS "
+        "WHERE NAME = '" + albumName + "' "
+        "AND USER_ID = " + std::to_string(userId) + ";"
+
+        "DELETE FROM PICTURES "
+        "WHERE ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = '" + albumName + "');";
+
+    char* errMessage = nullptr;
+    int res = sqlite3_exec(this->_db, deleteAlbumStatement.c_str(), nullptr, nullptr, &errMessage);
+    if (res != SQLITE_OK) {
+        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
+        sqlite3_free(errMessage);
+
+    } 
+}
+
+Album DatabaseAccess::openAlbum(const std::string& albumName)
+{
+    // basically here we would like to delete the allocated memory we got from openAlbum
+}
+
+void DatabaseAccess::tagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId)
+{
+    std::string tagUserStatement =
+        // tag user statement
+        "INSERT INTO TAGS (PICTURE_ID, USER_ID) "
+        "VALUES "
+        "((SELECT ID FROM PICTURES WHERE NAME = '" + pictureName + "' AND ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = '" + albumName + "')), " // find picture id by using the name of the album and the name of the picture
+        "'" + std::to_string(userId) + "');"; // use given user id
+
+    char* errMessage = nullptr;
+    int res = sqlite3_exec(this->_db, tagUserStatement.c_str(), nullptr, nullptr, &errMessage);
+    if (res != SQLITE_OK) {
+        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
+        sqlite3_free(errMessage);
+
+    }
+}
+
+void DatabaseAccess::untagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId)
+{
+    std::string untagUserStatement =
+        // delete certain tag statement - untag
+        "DELETE FROM TAGS WHERE "
+        "PICTURE_ID = (SELECT ID FROM PICTURES WHERE NAME = '" + pictureName + "' AND ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = '" + albumName + "'))" // find picture id by using the name of the album and the name of the picture
+        " AND USER_ID = " + std::to_string(userId) + ";";  // use given user id
+
+
+    char* errMessage = nullptr;
+    int res = sqlite3_exec(this->_db, untagUserStatement.c_str(), nullptr, nullptr, &errMessage);
+    if (res != SQLITE_OK) {
+        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
+        sqlite3_free(errMessage);
+
+    }
 }
