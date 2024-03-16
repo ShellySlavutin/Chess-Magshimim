@@ -101,3 +101,47 @@ void DatabaseAccess::untagUserInPicture(const std::string& albumName, const std:
 
     }
 }
+
+void DatabaseAccess::createUser(User& user)
+{
+    std::string createUserStatement =
+        "INSERT INTO USERS "
+        "(ID, NAME) " 
+        "VALUES('" + std::to_string(user.getId()) + "' ,'" + user.getName() + "'); ";
+
+    char* errMessage = nullptr;
+    int res = sqlite3_exec(this->_db, createUserStatement.c_str(), nullptr, nullptr, &errMessage);
+    if (res != SQLITE_OK) {
+        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
+        sqlite3_free(errMessage);
+
+    }
+}
+
+void DatabaseAccess::deleteUser(const User& user)
+{
+    std::string deleteUserStatement =
+        // Delete the tags in which the user is in them
+        "DELETE FROM TAGS "
+        "WHERE USER_ID = " + std::to_string(user.getId()) + "; "
+
+        // Delete statement of user's pictures
+        "DELETE FROM PICTURES "
+        "WHERE ALBUM_ID IN (SELECT ID FROM ALBUMS WHERE USER_ID = " + std::to_string(user.getId()) + "); "
+
+        // Delete statement of user's albums
+        "DELETE FROM ALBUMS "
+        "WHERE USER_ID = " + std::to_string(user.getId()) + "; " 
+
+        // Delete statement of user from users
+        "DELETE FROM USERS "
+        "WHERE ID = " + std::to_string(user.getId()) + "; "; // Remove the NAME condition
+
+    char* errMessage = nullptr;
+    int res = sqlite3_exec(this->_db, deleteUserStatement.c_str(), nullptr, nullptr, &errMessage);
+    if (res != SQLITE_OK) {
+        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
+        sqlite3_free(errMessage);
+
+    }
+}
