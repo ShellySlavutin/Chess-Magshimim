@@ -9,7 +9,7 @@ int DatabaseAccess::getAlbumsCallback(void* voidAlbum, int columnCount, char** d
     {
         if (std::string(columnName[i]) == ID_COLUMN)
         {
-            album.setOwner(atoi(data[i]));
+            album.setId(atoi(data[i]));
         }
         else if (std::string(columnName[i]) == NAME_COLUMN)
         {
@@ -226,6 +226,26 @@ void DatabaseAccess::clear()
 
 //ALBUM METHODS :
 
+const std::list<Album> DatabaseAccess::getAlbumsByName(const std::string& albumName)
+{
+    std::list<Album> albums = getAlbums();
+    std::list<Album> namedAlbums;
+
+
+    for (const auto& album : albums) {
+        if (album.getName() == albumName)
+        {
+            namedAlbums.push_back(album);
+        }
+    }
+    // Moved through the every album and didn't find matching album
+    if (namedAlbums.empty()) {
+        throw ItemNotFoundException("Could not found the album", albumName);
+    }
+    return namedAlbums;
+}
+
+
 const std::list<Album> DatabaseAccess::getAlbums()
 {
     std::list<Album> albums;
@@ -276,7 +296,41 @@ Album DatabaseAccess::openAlbum(const std::string& albumName)
     // basically here we would like to delete the allocated memory we got from openAlbum
 }
 
-//TAGS METHODS :
+void DatabaseAccess::printAlbums()
+{
+    std::list<Album> albums = getAlbums();
+
+    if (albums.empty()) {
+        throw MyException("There are no existing albums.");
+    }
+    std::cout << "Album list:" << std::endl;
+    std::cout << "-----------" << std::endl;
+    for (const Album& album : albums) {
+        std::cout << std::setw(5) << "* " << album;
+    }
+}
+
+//PICTURE METHODS :
+
+void DatabaseAccess::addPictureToAlbumByName(const std::string& albumName, const Picture& picture)
+{
+    std::list<Album> namedAlbums = getAlbumsByName(albumName);
+
+    for (const auto& album : namedAlbums)
+    {
+        std::string addPictureStatement =
+            "INSERT INTO PICTURES (NAME, LOCATION, CREATION_DATE, ALBUM_ID) "
+            "VALUES ("
+            "'" + picture.getName() + "', " 
+            "'" + picture.getPath() + "', "
+            "'" + picture.getCreationDate() + "', "
+            + std::to_string(album.getId()) + 
+            ");";
+
+        executeSqlQuery(addPictureStatement.c_str());
+    }
+}
+
 
 void DatabaseAccess::tagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId)
 {
@@ -383,7 +437,7 @@ User DatabaseAccess::getUser(int userId)
     }
 }
 
-std::list<User> DatabaseAccess::getUsers()
+std::list<User> DatabaseAccess::getUsers() 
 {
     std::list<User> users;
     std::string sqlGetUsers =
