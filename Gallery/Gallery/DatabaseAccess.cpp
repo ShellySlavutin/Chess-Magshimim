@@ -2,11 +2,9 @@
 
 bool DatabaseAccess::open()
 {
-    std::string dbFileName = "galleryDB.sqlite";
-
     // Open db
-    int file_exist = _access(dbFileName.c_str(), 0);
-    int res = sqlite3_open(dbFileName.c_str(), &this->_db);
+    int file_exist = _access(DB_FILE_NAME, 0);
+    int res = sqlite3_open(DB_FILE_NAME, &this->_db);
     if (res != SQLITE_OK) {
         this->_db = nullptr;
         std::cout << "Failed to open DB" << std::endl;
@@ -19,13 +17,7 @@ bool DatabaseAccess::open()
             "CREATE TABLE PICTURES (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL, LOCATION TEXT NOT NULL, CREATION_DATE TEXT NOT NULL, ALBUM_ID INTEGER NOT NULL, FOREIGN KEY(ALBUM_ID) REFERENCES ALBUMS(ID)); "
             "CREATE TABLE TAGS (PICTURE_ID INTEGER NOT NULL, USER_ID INTEGER NOT NULL, PRIMARY KEY(PICTURE_ID, USER_ID), FOREIGN KEY(PICTURE_ID) REFERENCES PICTURES(ID), FOREIGN KEY(USER_ID) REFERENCES USERS(ID));";
 
-        char* errMessage = nullptr;
-        res = sqlite3_exec(this->_db, sqlStatement, nullptr, nullptr, &errMessage);
-        if (res != SQLITE_OK) {
-            std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
-            sqlite3_free(errMessage);
-            return false;
-        }
+        executeSqlQuery(sqlStatement);
     }
 
     return true;
@@ -42,6 +34,47 @@ void DatabaseAccess::clear()
 
 }
 
+void DatabaseAccess::executeSqlQuery(const char* sql)
+{
+    sqlite3* db;
+    int res = sqlite3_open("galleryDB.sqlite", &db);
+    if (res != SQLITE_OK) {
+        std::cout << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_close(db);
+        return;
+    }
+
+    char* errMessage = nullptr;
+    res = sqlite3_exec(db, sql, nullptr, nullptr, &errMessage);
+    if (res != SQLITE_OK) {
+        std::cout << "SQL error: " << errMessage << std::endl;
+        sqlite3_free(errMessage);
+    }
+
+    sqlite3_close(db);
+}
+
+void DatabaseAccess::executeSqlQueryWithCallback(const char* sql, int(*callback)(void*, int, char**, char**), void* data)
+{
+    sqlite3* db;
+    int res = sqlite3_open("galleryDB.sqlite", &db);
+    if (res != SQLITE_OK) {
+        std::cout << "Failed to open database: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_close(db);
+        return;
+    }
+
+    char* errMessage = nullptr;
+    res = sqlite3_exec(db, sql, callback, data, &errMessage);
+    if (res != SQLITE_OK) {
+        std::cout << "SQL error: " << errMessage << std::endl;
+        sqlite3_free(errMessage);
+    }
+
+    sqlite3_close(db);
+}
+
+
 void DatabaseAccess::deleteAlbum(const std::string& albumName, int userId)
 {
     std::string deleteAlbumStatement =
@@ -52,13 +85,7 @@ void DatabaseAccess::deleteAlbum(const std::string& albumName, int userId)
         "DELETE FROM PICTURES "
         "WHERE ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = '" + albumName + "');";
 
-    char* errMessage = nullptr;
-    int res = sqlite3_exec(this->_db, deleteAlbumStatement.c_str(), nullptr, nullptr, &errMessage);
-    if (res != SQLITE_OK) {
-        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
-        sqlite3_free(errMessage);
-
-    } 
+    executeSqlQuery(deleteAlbumStatement.c_str());
 }
 
 Album DatabaseAccess::openAlbum(const std::string& albumName)
@@ -75,13 +102,7 @@ void DatabaseAccess::tagUserInPicture(const std::string& albumName, const std::s
         "((SELECT ID FROM PICTURES WHERE NAME = '" + pictureName + "' AND ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = '" + albumName + "')), " // find picture id by using the name of the album and the name of the picture
         "'" + std::to_string(userId) + "');"; // use given user id
 
-    char* errMessage = nullptr;
-    int res = sqlite3_exec(this->_db, tagUserStatement.c_str(), nullptr, nullptr, &errMessage);
-    if (res != SQLITE_OK) {
-        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
-        sqlite3_free(errMessage);
-
-    }
+    executeSqlQuery(tagUserStatement.c_str());
 }
 
 void DatabaseAccess::untagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId)
@@ -93,13 +114,8 @@ void DatabaseAccess::untagUserInPicture(const std::string& albumName, const std:
         " AND USER_ID = " + std::to_string(userId) + ";";  // use given user id
 
 
-    char* errMessage = nullptr;
-    int res = sqlite3_exec(this->_db, untagUserStatement.c_str(), nullptr, nullptr, &errMessage);
-    if (res != SQLITE_OK) {
-        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
-        sqlite3_free(errMessage);
+    executeSqlQuery(untagUserStatement.c_str());
 
-    }
 }
 
 void DatabaseAccess::createUser(User& user)
@@ -109,13 +125,8 @@ void DatabaseAccess::createUser(User& user)
         "(ID, NAME) " 
         "VALUES('" + std::to_string(user.getId()) + "' ,'" + user.getName() + "'); ";
 
-    char* errMessage = nullptr;
-    int res = sqlite3_exec(this->_db, createUserStatement.c_str(), nullptr, nullptr, &errMessage);
-    if (res != SQLITE_OK) {
-        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
-        sqlite3_free(errMessage);
+    executeSqlQuery(createUserStatement.c_str());
 
-    }
 }
 
 void DatabaseAccess::deleteUser(const User& user)
@@ -135,13 +146,8 @@ void DatabaseAccess::deleteUser(const User& user)
 
         // Delete statement of user from users
         "DELETE FROM USERS "
-        "WHERE ID = " + std::to_string(user.getId()) + "; "; // Remove the NAME condition
+        "WHERE ID = " + std::to_string(user.getId()) + "; "; 
 
-    char* errMessage = nullptr;
-    int res = sqlite3_exec(this->_db, deleteUserStatement.c_str(), nullptr, nullptr, &errMessage);
-    if (res != SQLITE_OK) {
-        std::cout << "Failed to execute SQL statement: " << errMessage << std::endl;
-        sqlite3_free(errMessage);
+    executeSqlQuery(deleteUserStatement.c_str());
 
-    }
 }

@@ -10,6 +10,8 @@
 #include <string>
 #include <list>
 
+#define DB_FILE_NAME "galleryDB.sqlite"
+
 class DatabaseAccess : public IDataAccess
 {
 public:
@@ -52,5 +54,8 @@ public:
 	void clear() override;
 
 private:
+	void executeSqlQuery(const char* sql);
+	void executeSqlQueryWithCallback(const char* sql, int(*callback)(void*, int, char**, char**), void* data);
+
 	sqlite3* _db;
 };
