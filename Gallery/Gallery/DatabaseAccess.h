@@ -12,6 +12,22 @@
 
 #define DB_FILE_NAME "galleryDB.sqlite"
 
+// Tables names
+#define ALBUMS_TABLE "Albums"
+#define PICS_TABLE "Pictures"
+#define USERS_TABLE "Users"
+#define TAGS_TABLE "Tags"
+
+// Columns names
+#define NAME_COLUMN "name"
+#define ID_COLUMN "id"
+#define LOCATION_COLUMN "location"
+#define CREATION_DATE_COLUMN "Creation_date"
+#define PICTURE_ID_COLUMN "picture_id"
+#define ALBUM_ID_COLUMN "album_id"
+#define USER_ID_COLUMN "user_id"
+
+
 class DatabaseAccess : public IDataAccess
 {
 public:
@@ -54,6 +70,10 @@ public:
 	void clear() override;
 
 private:
+	// Sql callback functions
+	static int getAlbumsCallback(void* voidAlbum, int columnCount, char** data, char** columnName);
+
+	// Execute queries - use those functions instead of repeating the same lines
 	void executeSqlQuery(const char* sql);
 	void executeSqlQueryWithCallback(const char* sql, int(*callback)(void*, int, char**, char**), void* data);
 
