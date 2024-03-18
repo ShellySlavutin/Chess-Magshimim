@@ -75,6 +75,8 @@ private:
 	// Sql callback functions
 	static int getAlbumsCallback(void* voidAlbum, int columnCount, char** data, char** columnName);
 	static int getUsersCallback(void* voidUser, int columnCount, char** data, char** columnName);
+	static int getPicturesCallback(void* voidPicture, int columnCount, char** data, char** columnName);
+
 
 	// Execute queries - use those functions instead of repeating the same lines
 	void executeSqlQuery(const char* sql);
