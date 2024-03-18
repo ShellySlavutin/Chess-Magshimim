@@ -109,9 +109,21 @@ void DatabaseAccess::clear()
 const std::list<Album> DatabaseAccess::getAlbums()
 {
     std::list<Album> albums;
-    std::string sqlGetAlbums = "SELECT * FROM " + std::string(ALBUMS_TABLE) + ";";
+    std::string sqlGetAlbums = "SELECT * FROM ALBUMS;";
 
     executeSqlQueryWithCallback(sqlGetAlbums.c_str(), getAlbumsCallback, &albums);
+
+    return albums;
+}
+
+const std::list<Album> DatabaseAccess::getAlbumsOfUser(const User& user)
+{
+    std::list<Album> albums;
+    std::string sqlGetAlbumsOfUser = 
+        "SELECT * FROM ALBUMS "  
+        " WHERE USER_ID = " + std::to_string(user.getId()) + ";";
+
+    executeSqlQueryWithCallback(sqlGetAlbumsOfUser.c_str(), getAlbumsCallback, &albums);
 
     return albums;
 }
