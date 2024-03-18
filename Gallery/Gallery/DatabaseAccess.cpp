@@ -226,24 +226,21 @@ void DatabaseAccess::clear()
 
 //ALBUM METHODS :
 
-const std::list<Album> DatabaseAccess::getAlbumsByName(const std::string& albumName)
+const Album DatabaseAccess::getAlbumByName(const std::string& albumName)
 {
     std::list<Album> albums = getAlbums();
-    std::list<Album> namedAlbums;
-
 
     for (const auto& album : albums) {
-        if (album.getName() == albumName)
+        if (album.getName() == albumName) // Assume the first album with the name wanted is the desired Album
         {
-            namedAlbums.push_back(album);
+            return album;
         }
     }
-    // Moved through the every album and didn't find matching album
-    if (namedAlbums.empty()) {
-        throw ItemNotFoundException("Could not found the album", albumName);
-    }
-    return namedAlbums;
+
+    // Didn't find a matching album
+    throw ItemNotFoundException("Could not find the album", albumName);
 }
+
 
 
 const std::list<Album> DatabaseAccess::getAlbums()
@@ -268,32 +265,75 @@ const std::list<Album> DatabaseAccess::getAlbumsOfUser(const User& user)
     return albums;
 }
 
+void DatabaseAccess::createAlbum(const Album& album)
+{
+    std::string createAlbumStatement =
+        "INSERT INTO ALBUMS "
+        "(NAME, USER_ID, CREATION_DATE) "
+        "VALUES "
+        "('" + album.getName() + "', " + std::to_string(album.getOwnerId()) + ", '" + album.getCreationDate() + "');";
+
+    executeSqlQuery(createAlbumStatement.c_str());
+}
+
+
 void DatabaseAccess::deleteAlbum(const std::string& albumName, int userId)
 {
-    // Begin transaction
-    executeSqlQuery("BEGIN TRANSACTION;");
+    std::string sqlCommands;
+    try
+    {
+        sqlCommands += "BEGIN TRANSACTION; ";
 
-    // Construct SQL statements
-    std::string deleteAlbumStatement =
-        "DELETE FROM ALBUMS "
-        "WHERE NAME = '" + albumName + "' "
-        "AND USER_ID = " + std::to_string(userId) + ";";
+        // Construct SQL statements for deleting the album and its pictures
+        std::string deleteAlbumStatement =
+            "DELETE FROM ALBUMS "
+            "WHERE NAME = '" + albumName + "' "
+            "AND USER_ID = " + std::to_string(userId) + ";";
 
-    std::string deletePicturesStatement =
-        "DELETE FROM PICTURES "
-        "WHERE ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = '" + albumName + "');";
+        std::string deletePicturesStatement =
+            "DELETE FROM PICTURES "
+            "WHERE ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = '" + albumName + "');";
 
-    // Execute SQL statements
-    executeSqlQuery(deleteAlbumStatement.c_str());
-    executeSqlQuery(deletePicturesStatement.c_str());
+        // Add SQL statements to the command
+        sqlCommands += deleteAlbumStatement;
+        sqlCommands += deletePicturesStatement;
 
-    // Commit transaction
-    executeSqlQuery("COMMIT;");
+        // Commit transaction
+        sqlCommands += "COMMIT; ";
+
+        // Execute the SQL commands
+        executeSqlQuery(sqlCommands.c_str());
+    }
+    catch (const std::exception& e)
+    {
+        // If an exception occurs, rollback the transaction
+        executeSqlQuery("ROLLBACK;");
+        throw e;
+    }
 }
+
+bool DatabaseAccess::doesAlbumExists(const std::string& albumName, int userId)
+{
+    std::list<Album> albums;
+    std::string sqlGetAlbumExists =
+        "SELECT * FROM ALBUMS "
+        " WHERE USER_ID = " + std::to_string(userId) +
+        " AND NAME = '" + albumName + "';";
+
+    executeSqlQueryWithCallback(sqlGetAlbumExists.c_str(), getAlbumsCallback, &albums);
+
+    return !albums.empty();
+}
+
 
 Album DatabaseAccess::openAlbum(const std::string& albumName)
 {
-    // basically here we would like to delete the allocated memory we got from openAlbum
+    getAlbumByName(albumName); // CHECK LATER
+}
+
+void DatabaseAccess::closeAlbum(Album& pAlbum)
+{
+    // NOTHING TO DO!
 }
 
 void DatabaseAccess::printAlbums()
@@ -314,20 +354,23 @@ void DatabaseAccess::printAlbums()
 
 void DatabaseAccess::addPictureToAlbumByName(const std::string& albumName, const Picture& picture)
 {
-    std::list<Album> namedAlbums = getAlbumsByName(albumName);
+    try {
+        Album album = getAlbumByName(albumName);
 
-    for (const auto& album : namedAlbums)
-    {
         std::string addPictureStatement =
             "INSERT INTO PICTURES (NAME, LOCATION, CREATION_DATE, ALBUM_ID) "
             "VALUES ("
-            "'" + picture.getName() + "', " 
+            "'" + picture.getName() + "', "
             "'" + picture.getPath() + "', "
             "'" + picture.getCreationDate() + "', "
-            + std::to_string(album.getId()) + 
+            + std::to_string(album.getId()) +
             ");";
 
         executeSqlQuery(addPictureStatement.c_str());
+    }
+    catch (const ItemNotFoundException& e) {
+        std::cerr << e.what() << std::endl;
+        // Handle case where album is not found
     }
 }
 
