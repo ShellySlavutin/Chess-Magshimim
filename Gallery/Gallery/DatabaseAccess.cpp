@@ -30,6 +30,29 @@ int DatabaseAccess::getAlbumsCallback(void* voidAlbum, int columnCount, char** d
     return 0;
 }
 
+int DatabaseAccess::getUsersCallback(void* voidUser, int columnCount, char** data, char** columnName)
+{
+    auto users = static_cast<std::list<User>*>(voidUser);
+    User user;
+
+    // get album data
+    for (int i = 0; i < columnCount; ++i)
+    {
+        if (std::string(columnName[i]) == ID_COLUMN)
+        {
+            user.setId(atoi(data[i]));
+        }
+        else if (std::string(columnName[i]) == NAME_COLUMN)
+        {
+            user.setName(data[i]);
+        }
+    }
+
+    users->push_back(user);
+    return 0;
+
+}
+
 void DatabaseAccess::executeSqlQuery(const char* sql)
 {
     sqlite3* db;
@@ -69,6 +92,7 @@ void DatabaseAccess::executeSqlQueryWithCallback(const char* sql, int(*callback)
 
     sqlite3_close(db);
 }
+
 
 bool DatabaseAccess::open()
 {
@@ -156,6 +180,8 @@ Album DatabaseAccess::openAlbum(const std::string& albumName)
     // basically here we would like to delete the allocated memory we got from openAlbum
 }
 
+//TAGS METHODS :
+
 void DatabaseAccess::tagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId)
 {
     std::string tagUserStatement =
@@ -180,6 +206,8 @@ void DatabaseAccess::untagUserInPicture(const std::string& albumName, const std:
     executeSqlQuery(untagUserStatement.c_str());
 
 }
+
+//USER METHODS : 
 
 void DatabaseAccess::createUser(User& user)
 {
@@ -213,4 +241,24 @@ void DatabaseAccess::deleteUser(const User& user)
 
     // Commit transaction
     executeSqlQuery("COMMIT;");
+}
+
+User DatabaseAccess::getUser(int userId)
+{
+    std::list<User> users;
+    std::string sqlGetUser =
+        "SELECT * FROM USERS "
+        " WHERE ID = " + std::to_string(userId) + ";";
+
+    executeSqlQueryWithCallback(sqlGetUser.c_str(), getUsersCallback, &users);
+
+    if (users.size() == 0)
+    {
+        throw ItemNotFoundException("User with the following ID not found", userId);
+        return User();
+    }
+    else
+    {
+        return users.front();
+    }
 }
