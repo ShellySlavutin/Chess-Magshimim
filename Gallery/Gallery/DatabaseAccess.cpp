@@ -77,15 +77,25 @@ void DatabaseAccess::executeSqlQueryWithCallback(const char* sql, int(*callback)
 
 void DatabaseAccess::deleteAlbum(const std::string& albumName, int userId)
 {
+    // Begin transaction
+    executeSqlQuery("BEGIN TRANSACTION;");
+
+    // Construct SQL statements
     std::string deleteAlbumStatement =
         "DELETE FROM ALBUMS "
         "WHERE NAME = '" + albumName + "' "
-        "AND USER_ID = " + std::to_string(userId) + ";"
+        "AND USER_ID = " + std::to_string(userId) + ";";
 
+    std::string deletePicturesStatement =
         "DELETE FROM PICTURES "
         "WHERE ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = '" + albumName + "');";
 
+    // Execute SQL statements
     executeSqlQuery(deleteAlbumStatement.c_str());
+    executeSqlQuery(deletePicturesStatement.c_str());
+
+    // Commit transaction
+    executeSqlQuery("COMMIT;");
 }
 
 Album DatabaseAccess::openAlbum(const std::string& albumName)
@@ -131,23 +141,23 @@ void DatabaseAccess::createUser(User& user)
 
 void DatabaseAccess::deleteUser(const User& user)
 {
+    // Begin transaction
+    executeSqlQuery("BEGIN TRANSACTION;");
+
+    // Construct SQL statement
     std::string deleteUserStatement =
-        // Delete the tags in which the user is in them
         "DELETE FROM TAGS "
         "WHERE USER_ID = " + std::to_string(user.getId()) + "; "
-
-        // Delete statement of user's pictures
         "DELETE FROM PICTURES "
         "WHERE ALBUM_ID IN (SELECT ID FROM ALBUMS WHERE USER_ID = " + std::to_string(user.getId()) + "); "
-
-        // Delete statement of user's albums
         "DELETE FROM ALBUMS "
-        "WHERE USER_ID = " + std::to_string(user.getId()) + "; " 
-
-        // Delete statement of user from users
+        "WHERE USER_ID = " + std::to_string(user.getId()) + "; "
         "DELETE FROM USERS "
-        "WHERE ID = " + std::to_string(user.getId()) + "; "; 
+        "WHERE ID = " + std::to_string(user.getId()) + "; ";
 
+    // Execute SQL statement
     executeSqlQuery(deleteUserStatement.c_str());
 
+    // Commit transaction
+    executeSqlQuery("COMMIT;");
 }
