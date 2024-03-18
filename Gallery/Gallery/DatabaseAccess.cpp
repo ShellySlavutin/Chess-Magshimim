@@ -374,6 +374,35 @@ void DatabaseAccess::addPictureToAlbumByName(const std::string& albumName, const
     }
 }
 
+void DatabaseAccess::removePictureFromAlbumByName(const std::string& albumName, const std::string& pictureName)
+{
+    std::string sql;
+
+    try
+    {
+        // Start transaction
+        executeSqlQuery("BEGIN;");
+
+        // Find the user ID based on the album name
+        Album album = getAlbumByName(albumName);
+        int userId = album.getOwnerId();
+
+        sql = "DELETE FROM PICTURES WHERE "
+            " ALBUM_ID = " + std::to_string(album.getId()) + " AND "
+            " NAME = '" + pictureName + "';";
+
+        executeSqlQuery(sql.c_str());
+
+        // UNTAG ALL TAGS OF PICTURE
+
+        executeSqlQuery("END;");
+    }
+    catch (const ItemNotFoundException& e) {
+        std::cerr << e.what() << std::endl;
+    }
+
+}
+
 
 void DatabaseAccess::tagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId)
 {

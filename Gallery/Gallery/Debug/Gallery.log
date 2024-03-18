@@ -1,8 +1,10 @@
 ﻿  Album.cpp
   AlbumManager.cpp
+  DatabaseAccess.cpp
+C:\Users\Magshimim\Documents\Magshimim\Cpp\Week 15 -18 Gallery\Gallery\gallery_shelly_slavutin_2024\Gallery\Gallery\DatabaseAccess.cpp(216,22): error C2084: function 'void DatabaseAccess::close(void)' already has a body
+C:\Users\Magshimim\Documents\Magshimim\Cpp\Week 15 -18 Gallery\Gallery\gallery_shelly_slavutin_2024\Gallery\Gallery\DatabaseAccess.h(73,7): message : see previous definition of 'close'
   MemoryAccess.cpp
   Picture.cpp
   User.cpp
   Gallery.cpp
   Generating Code...
-  Gallery.vcxproj -> C:\Users\Magshimim\Documents\Magshimim\Cpp\Week 15 -18 Gallery\Gallery\V1.0.0\Gallery\Gallery\Debug\Gallery.exe
