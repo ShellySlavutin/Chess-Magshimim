@@ -55,6 +55,7 @@ public:
 	void deleteUser(const User& user) override;
 	bool doesUserExists(int userId) override;
 	User getUser(int userId) override;
+	std::list<User> getUsers();
 
 	// user statistics
 	int countAlbumsOwnedOfUser(const User& user) override;

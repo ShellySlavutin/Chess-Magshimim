@@ -305,6 +305,18 @@ void DatabaseAccess::untagUserInPicture(const std::string& albumName, const std:
 
 //USER METHODS : 
 
+void DatabaseAccess::printUsers()
+{
+    std::cout << "Users list:" << std::endl;
+    std::cout << "-----------" << std::endl;
+
+    std::list<User> users = getUsers();
+
+    for (const auto& user : users){
+        std::cout << user << std::endl;
+    }
+}
+
 void DatabaseAccess::createUser(User& user)
 {
     std::string createUserStatement =
@@ -339,6 +351,18 @@ void DatabaseAccess::deleteUser(const User& user)
     executeSqlQuery("COMMIT;");
 }
 
+bool DatabaseAccess::doesUserExists(int userId)
+{
+    std::list<User> users;
+    std::string sqlGetUserExists =
+        "SELECT * FROM USERS "
+        " WHERE ID = " + std::to_string(userId) + ";";
+
+    executeSqlQueryWithCallback(sqlGetUserExists.c_str(), getUsersCallback, &users);
+
+    return !users.empty();
+}
+
 User DatabaseAccess::getUser(int userId)
 {
     std::list<User> users;
@@ -357,4 +381,19 @@ User DatabaseAccess::getUser(int userId)
     {
         return users.front();
     }
+}
+
+std::list<User> DatabaseAccess::getUsers()
+{
+    std::list<User> users;
+    std::string sqlGetUsers =
+        "SELECT * FROM USERS;";
+
+    executeSqlQueryWithCallback(sqlGetUsers.c_str(), getUsersCallback, &users);
+
+    if (users.empty())
+    {
+        throw MyException("No users exist");
+    }
+    return users;
 }
