@@ -35,7 +35,6 @@ int DatabaseAccess::getUsersCallback(void* voidUser, int columnCount, char** dat
     auto users = static_cast<std::list<User>*>(voidUser);
     User user;
 
-    // get album data
     for (int i = 0; i < columnCount; ++i)
     {
         if (std::string(columnName[i]) == ID_COLUMN)
@@ -51,6 +50,35 @@ int DatabaseAccess::getUsersCallback(void* voidUser, int columnCount, char** dat
     users->push_back(user);
     return 0;
 
+}
+
+int DatabaseAccess::getPicturesCallback(void* voidPicture, int columnCount, char** data, char** columnName)
+{
+    auto pics = static_cast<std::list<Picture>*>(voidPicture);
+    Picture pic;
+
+    for (int i = 0; i < columnCount; ++i)
+    {
+        if (std::string(columnName[i]) == ID_COLUMN)
+        {
+            pic.setId(atoi(data[i]));
+        }
+        else if (std::string(columnName[i]) == NAME_COLUMN)
+        {
+            pic.setName(data[i]);
+        }
+        else if (std::string(columnName[i]) == LOCATION_COLUMN)
+        {
+            pic.setPath(data[i]);
+        }
+        else if (std::string(columnName[i]) == CREATION_DATE_COLUMN)
+        {
+            pic.setCreationDate(data[i]);
+        }
+    }
+
+    pics->push_back(pic);
+    return 0;
 }
 
 void DatabaseAccess::executeSqlQuery(const char* sql)
@@ -93,6 +121,74 @@ void DatabaseAccess::executeSqlQueryWithCallback(const char* sql, int(*callback)
     sqlite3_close(db);
 }
 
+
+//QUERIES METHODS:
+
+User DatabaseAccess::getTopTaggedUser()
+{
+    std::list<User> users;
+    std::string sqlGetTopTaggedUser =
+        "SELECT USERS.* FROM USERS "
+        "INNER JOIN TAGS "
+        "ON USERS.ID = TAGS.USER_ID "
+        "GROUP BY USERS.ID "
+        "ORDER BY COUNT(*) DESC "
+        "LIMIT 1;";
+
+    executeSqlQueryWithCallback(sqlGetTopTaggedUser.c_str(), getUsersCallback, &users);
+
+    if (users.empty())
+    {
+        throw MyException("No user found");
+        return User();
+    }
+    else
+    {
+        return users.front();
+    }
+}
+
+Picture DatabaseAccess::getTopTaggedPicture()
+{
+    std::list<Picture> pictures;
+    std::string sqlGetTopTaggedPicture =
+        "SELECT PICTURES.* FROM PICTURES "
+        "INNER JOIN TAGS "
+        "ON PICTURES.ID = TAGS.PICTURE_ID "
+        "GROUP BY PICTURES.ID "
+        "ORDER BY COUNT(*) DESC "
+        "LIMIT 1;";
+
+    executeSqlQueryWithCallback(sqlGetTopTaggedPicture.c_str(), getPicturesCallback, &pictures);
+
+    if (pictures.empty())
+    {
+        throw MyException("No picture found");
+        return Picture();
+    }
+    else
+    {
+        return pictures.front();
+    }
+}
+
+std::list<Picture> DatabaseAccess::getTaggedPicturesOfUser(const User& user)
+{
+    std::list<Picture> pictures;
+    std::string sqlGetTaggedPicturesOfUser =
+        "SELECT PICTURES.* FROM PICTURES "
+        "INNER JOIN TAGS "
+        "ON PICTURES.ID = TAGS.PICTURE_ID "
+        "WHERE TAGS.USER_ID = " + std::to_string(user.getId()) + ";";
+
+    executeSqlQueryWithCallback(sqlGetTaggedPicturesOfUser.c_str(), getPicturesCallback, &pictures);
+
+    if (pictures.empty())
+    {
+        throw MyException("No pictures found");
+    }
+    return pictures;
+}
 
 bool DatabaseAccess::open()
 {
@@ -252,7 +348,7 @@ User DatabaseAccess::getUser(int userId)
 
     executeSqlQueryWithCallback(sqlGetUser.c_str(), getUsersCallback, &users);
 
-    if (users.size() == 0)
+    if (users.empty())
     {
         throw ItemNotFoundException("User with the following ID not found", userId);
         return User();
