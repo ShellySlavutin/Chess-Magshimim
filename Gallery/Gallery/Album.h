@@ -17,6 +17,9 @@ public:
 	int getOwnerId() const;
 	void setOwner(int userId);
 
+	int getId() const;
+	void setId(int albumId);
+
 	std::string getCreationDate() const;
 	void setCreationDate(const std::string& creationTime);
 	void setCreationDateNow();
@@ -38,6 +41,7 @@ public:
 	friend std::ostream& operator<<(std::ostream& strOut, const Album& album);
 
 private:
+	int m_albumId { 0 }; // Added for v1.0.2
     int m_ownerId { 0 };
 	std::string m_name;
 	std::string m_creationDate;
