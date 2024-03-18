@@ -34,7 +34,7 @@ class DatabaseAccess : public IDataAccess
 {
 public:
 	// album related
-	const std::list<Album> getAlbumsByName(const std::string& albumName);
+	const Album getAlbumByName(const std::string& albumName);
 	const std::list<Album> getAlbums() override;
 	const std::list<Album> getAlbumsOfUser(const User& user) override;
 	void createAlbum(const Album& album) override;
