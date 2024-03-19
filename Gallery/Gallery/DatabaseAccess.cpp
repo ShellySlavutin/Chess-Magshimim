@@ -352,6 +352,36 @@ void DatabaseAccess::printAlbums()
 
 //PICTURE METHODS :
 
+Picture DatabaseAccess::getPictureFromAlbum(const std::string& albumName, const std::string& pictureName)
+{
+    try
+    {
+        Album album = getAlbumByName(albumName);
+
+        std::list<Picture> pics;
+        std::string sqlGetPic =
+            "SELECT * FROM PICTURES "
+            " WHERE ALBUM_ID = " + std::to_string(album.getId()) +
+            " AND NAME = '" + pictureName + "';";
+
+        executeSqlQueryWithCallback(sqlGetPic.c_str(), getPicturesCallback, &pics);
+
+        if (pics.empty())
+        {
+            throw ItemNotFoundException("Picture with the following name not found", pictureName);
+        }
+        else
+        {
+            return pics.front();
+        }
+    }
+    catch (const ItemNotFoundException& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return Picture();
+    }
+}
+
 void DatabaseAccess::addPictureToAlbumByName(const std::string& albumName, const Picture& picture)
 {
     try {
@@ -393,7 +423,7 @@ void DatabaseAccess::removePictureFromAlbumByName(const std::string& albumName, 
 
         executeSqlQuery(sql.c_str());
 
-        // UNTAG ALL TAGS OF PICTURE
+        removeTagsOfPicture(albumName, pictureName);
 
         executeSqlQuery("END;");
     }
@@ -401,6 +431,18 @@ void DatabaseAccess::removePictureFromAlbumByName(const std::string& albumName, 
         std::cerr << e.what() << std::endl;
     }
 
+}
+
+void DatabaseAccess::removeTagsOfPicture(const std::string& albumName, const std::string& pictureName)
+{
+    std::string untagPicStatement =
+        // delete certain tag statement - untag
+        "DELETE FROM TAGS WHERE "
+        "PICTURE_ID = (SELECT ID FROM PICTURES WHERE NAME = '" + pictureName + 
+        "' AND ALBUM_ID = (SELECT ID FROM ALBUMS WHERE NAME = '" + albumName + "'));"; 
+        // find picture id by using the name of the album and the name of the picture
+
+    executeSqlQuery(untagPicStatement.c_str());
 }
 
 
