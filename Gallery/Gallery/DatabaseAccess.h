@@ -86,6 +86,9 @@ private:
 	static int getAlbumsCallback(void* voidAlbum, int columnCount, char** data, char** columnName);
 	static int getUsersCallback(void* voidUser, int columnCount, char** data, char** columnName);
 	static int getPicturesCallback(void* voidPicture, int columnCount, char** data, char** columnName);
+	static int getUsersCallback(void* voidPicture, int columnCount, char** data, char** columnName);
+	static int getIntCallback(void* voidInt, int columnCount, char** data, char** columnName);
+
 
 
 	// Execute queries - use those functions instead of repeating the same lines
