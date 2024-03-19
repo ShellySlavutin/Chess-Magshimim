@@ -33,6 +33,9 @@
 class DatabaseAccess : public IDataAccess
 {
 public:
+	DatabaseAccess();
+	~DatabaseAccess();
+
 	// album related
 	const Album getAlbumByName(const std::string& albumName);
 	const std::list<Album> getAlbums() override;
@@ -88,8 +91,6 @@ private:
 	static int getPicturesCallback(void* voidPicture, int columnCount, char** data, char** columnName);
 	static int getUsersCallback(void* voidPicture, int columnCount, char** data, char** columnName);
 	static int getIntCallback(void* voidInt, int columnCount, char** data, char** columnName);
-
-
 
 	// Execute queries - use those functions instead of repeating the same lines
 	void executeSqlQuery(const char* sql);

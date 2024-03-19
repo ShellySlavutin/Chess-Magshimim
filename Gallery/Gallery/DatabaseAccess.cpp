@@ -1,5 +1,7 @@
 #include "DatabaseAccess.h"
 
+//CALLBACK PRIVATE HELPER METHODS
+
 int DatabaseAccess::getAlbumsCallback(void* voidAlbum, int columnCount, char** data, char** columnName)
 {
     auto albums = static_cast<std::list<Album>*>(voidAlbum); // Revert back to album list from void
@@ -95,6 +97,8 @@ int DatabaseAccess::getPicturesCallback(void* voidPicture, int columnCount, char
     return 0;
 }
 
+// EXECUTE QUERY PRIVATE HELPER METHODS:
+
 void DatabaseAccess::executeSqlQuery(const char* sql)
 {
     sqlite3* db;
@@ -133,6 +137,55 @@ void DatabaseAccess::executeSqlQueryWithCallback(const char* sql, int(*callback)
     }
 
     sqlite3_close(db);
+}
+
+
+bool DatabaseAccess::open()
+{
+    // Open db
+    int file_exist = _access(DB_FILE_NAME, 0);
+    int res = sqlite3_open(DB_FILE_NAME, &this->_db);
+
+    if (res != SQLITE_OK) {
+        this->_db = nullptr;
+        std::cout << "Failed to open DB" << std::endl;
+        return false;
+    }
+    if (file_exist != 0) {
+        // if not exists - create new db
+        const char* sqlStatement =
+            "CREATE TABLE IF NOT EXISTS USERS (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL); "
+            "CREATE TABLE IF NOT EXISTS ALBUMS (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL, USER_ID INTEGER NOT NULL, CREATION_DATE TEXT NOT NULL, FOREIGN KEY(USER_ID) REFERENCES USERS(ID)); "
+            "CREATE TABLE IF NOT EXISTS PICTURES (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL, LOCATION TEXT NOT NULL, CREATION_DATE TEXT NOT NULL, ALBUM_ID INTEGER NOT NULL, FOREIGN KEY(ALBUM_ID) REFERENCES ALBUMS(ID)); "
+            "CREATE TABLE IF NOT EXISTS TAGS (PICTURE_ID INTEGER NOT NULL, USER_ID INTEGER NOT NULL, PRIMARY KEY(PICTURE_ID, USER_ID), FOREIGN KEY(PICTURE_ID) REFERENCES PICTURES(ID), FOREIGN KEY(USER_ID) REFERENCES USERS(ID));";
+
+        executeSqlQuery(sqlStatement);
+    }
+
+    return true;
+}
+
+void DatabaseAccess::close()
+{
+    sqlite3_close(this->_db);
+    this->_db = nullptr;
+}
+
+void DatabaseAccess::clear()
+{
+
+}
+
+
+DatabaseAccess::DatabaseAccess() : _db(nullptr)
+{
+    if (!open())
+        throw MyException("Can't connect to DB!");
+}
+
+DatabaseAccess::~DatabaseAccess()
+{
+    close();
 }
 
 
@@ -204,40 +257,6 @@ std::list<Picture> DatabaseAccess::getTaggedPicturesOfUser(const User& user)
     return pictures;
 }
 
-bool DatabaseAccess::open()
-{
-    // Open db
-    int file_exist = _access(DB_FILE_NAME, 0);
-    int res = sqlite3_open(DB_FILE_NAME, &this->_db);
-    if (res != SQLITE_OK) {
-        this->_db = nullptr;
-        std::cout << "Failed to open DB" << std::endl;
-        return false;
-    }
-    if (file_exist != 0) {
-        const char* sqlStatement =
-            "CREATE TABLE USERS (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL); "
-            "CREATE TABLE ALBUMS (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL, USER_ID INTEGER NOT NULL, CREATION_DATE TEXT NOT NULL, FOREIGN KEY(USER_ID) REFERENCES USERS(ID)); "
-            "CREATE TABLE PICTURES (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, NAME TEXT NOT NULL, LOCATION TEXT NOT NULL, CREATION_DATE TEXT NOT NULL, ALBUM_ID INTEGER NOT NULL, FOREIGN KEY(ALBUM_ID) REFERENCES ALBUMS(ID)); "
-            "CREATE TABLE TAGS (PICTURE_ID INTEGER NOT NULL, USER_ID INTEGER NOT NULL, PRIMARY KEY(PICTURE_ID, USER_ID), FOREIGN KEY(PICTURE_ID) REFERENCES PICTURES(ID), FOREIGN KEY(USER_ID) REFERENCES USERS(ID));";
-
-        executeSqlQuery(sqlStatement);
-    }
-
-    return true;
-}
-
-void DatabaseAccess::close()
-{
-    sqlite3_close(this->_db);
-    this->_db = nullptr;
-}
-
-void DatabaseAccess::clear()
-{
-
-}
-
 //ALBUM METHODS :
 
 const Album DatabaseAccess::getAlbumByName(const std::string& albumName)
@@ -254,7 +273,6 @@ const Album DatabaseAccess::getAlbumByName(const std::string& albumName)
     // Didn't find a matching album
     throw ItemNotFoundException("Could not find the album", albumName);
 }
-
 
 
 const std::list<Album> DatabaseAccess::getAlbums()
