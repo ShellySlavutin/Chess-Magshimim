@@ -52,6 +52,20 @@ int DatabaseAccess::getUsersCallback(void* voidUser, int columnCount, char** dat
 
 }
 
+int DatabaseAccess::getIntCallback(void* voidInt, int columnCount, char** data, char** columnName)
+{
+    int* intNum = static_cast<int*>(voidInt);
+
+    if (data[0]) {
+        *intNum = atoi(data[0]);
+    }
+    else {
+        *intNum = 0;
+    }
+
+    return 0;
+}
+
 int DatabaseAccess::getPicturesCallback(void* voidPicture, int columnCount, char** data, char** columnName)
 {
     auto pics = static_cast<std::list<Picture>*>(voidPicture);
@@ -564,4 +578,55 @@ std::list<User> DatabaseAccess::getUsers()
         throw MyException("No users exist");
     }
     return users;
+}
+
+// USER STATISTICS METHODS:
+
+int DatabaseAccess::countAlbumsOwnedOfUser(const User& user)
+{
+    // Construct the SQL query to count albums owned by the user
+    std::string countAlbumsQuery =
+        "SELECT COUNT(*) FROM ALBUMS WHERE USER_ID = " + std::to_string(user.getId()) + ";";
+
+    int count = 0;
+    executeSqlQueryWithCallback(countAlbumsQuery.c_str(), getIntCallback, &count);
+
+    return count;
+}
+
+int DatabaseAccess::countAlbumsTaggedOfUser(const User& user)
+{
+    // UNSURE
+    
+    // Construct the SQL query to count tags 
+    std::string countTagsQuery =
+        "SELECT COUNT(DISTINCT ALBUMS.ID) FROM ALBUMS "
+        "INNER JOIN PICTURES ON ALBUMS.ID = PICTURES.ALBUM_ID "
+        "INNER JOIN TAGS ON PICTURES.ID = TAGS.PICTURE_ID "
+        "WHERE TAGS.USER_ID = " + std::to_string(user.getId()) + ";";
+
+    // Execute the SQL query
+    int count = 0;
+    executeSqlQueryWithCallback(countTagsQuery.c_str(), getIntCallback, &count);
+
+    return count;
+}
+
+int DatabaseAccess::countTagsOfUser(const User& user)
+{
+    // Construct the SQL query to count tags 
+    std::string countTagsQuery =
+        "SELECT COUNT(*) FROM TAGS "
+        "WHERE TAGS.USER_ID = " + std::to_string(user.getId()) + ";";
+
+    // Execute the SQL query
+    int count = 0;
+    executeSqlQueryWithCallback(countTagsQuery.c_str(), getIntCallback, &count);
+
+    return count;
+}
+
+float DatabaseAccess::averageTagsPerAlbumOfUser(const User& user)
+{
+    return countTagsOfUser(user) / countAlbumsTaggedOfUser(user);
 }
