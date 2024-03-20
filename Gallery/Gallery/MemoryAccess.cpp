@@ -185,10 +185,15 @@ void MemoryAccess::deleteUser(const User& user)
 
 		// Delete the albums of the user
 		std::list<Album> userAlbumList = getAlbumsOfUser(user);
-		for (auto iter : userAlbumList) {
+		for (auto& iter : userAlbumList) {
 			deleteAlbum(iter.getName(), user.getId()); 
 		}
-	
+
+		// Delete all the tags in the album
+		for (auto& album : m_albums) {
+			album.untagUserInAlbum(user.getId());
+		}
+
 		for (auto iter = m_users.begin(); iter != m_users.end(); ++iter) {
 			if (*iter == user) {
 				iter = m_users.erase(iter);
