@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include <string>
 #include "MemoryAccess.h"
 #include "AlbumManager.h"
@@ -28,6 +29,16 @@ int getCommandNumberFromUser()
 	return std::atoi(input.c_str());
 }
 
+void printDateAndName()
+{
+	// Add feature - my name as a develepor and the current hour and date 
+	const auto now = std::chrono::system_clock::now();
+	const std::time_t t_c = std::chrono::system_clock::to_time_t(now);
+
+	std::cout << "Developer name : Shelly Slavutin" << std::endl;
+	std::cout << "Current hour and date : " << std::ctime(&t_c) << std::endl;
+}
+
 int main(void)
 {
 	// initialization data access
@@ -36,6 +47,7 @@ int main(void)
 	// initialize album manager
 	AlbumManager albumManager(dataAccess);
 
+	printDateAndName();
 
 	std::string albumName;
 	std::cout << "Welcome to Gallery!" << std::endl;
