@@ -271,7 +271,7 @@ void AlbumManager::listUserTags()
 	const std::set<int> users = pic.getUserTags();
 
 	if ( 0 == users.size() )  {
-		throw MyException("Error: There is no user tegged in <" + picName + ">.\n");
+		throw MyException("Error: There is no user tagged in <" + picName + ">.\n");
 	}
 
 	std::cout << "Tagged users in picture <" << picName << ">:" << std::endl;
@@ -310,6 +310,7 @@ void AlbumManager::removeUser()
 	}
 
 	m_dataAccess.deleteUser(user);
+
 	std::cout << "User @" << userId << " deleted successfully." << std::endl;
 }
 
