@@ -10,6 +10,7 @@ class Picture
 public:
 	Picture(int id, const std::string& name);
 	Picture(int id, const std::string& name, const std::string& pathOnDisk, const std::string& creationDate);
+	Picture() = default;
 
 	int getId() const;
 	void setId(int id);

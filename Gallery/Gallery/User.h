@@ -7,6 +7,7 @@ class User
 public:
 	
 	User(int id, const std::string& name);
+	User() = default;
 
 	int getId() const;
 	void setId(int id);
