@@ -204,14 +204,11 @@ void AlbumManager::showPicture()
 	}
 	else {
 		// Open the picture using one of the choices by the user
-		
-
+		openPictureThroughApp(pic);
 	}
-
-	// Bad practice!!!
-	// Can lead to privileges escalation
-	// You will replace it on WinApi Lab(bonus)
 }
+
+volatile bool g_flag = false;
 
 void AlbumManager::openPictureThroughApp(Picture pic)
 {
@@ -220,6 +217,11 @@ void AlbumManager::openPictureThroughApp(Picture pic)
 	STARTUPINFOA info = { sizeof(info) };
 	PROCESS_INFORMATION processInfo;
 	std::string p = pic.getPath();
+
+	// Set the console control handler to handle Ctrl+C
+	if (!SetConsoleCtrlHandler(console_ctrl_handler, TRUE)) {
+		throw MyException("Error setting console control handler.");
+	}
 
 	do {
 		// Prompt the user to enter a choice
@@ -254,8 +256,27 @@ void AlbumManager::openPictureThroughApp(Picture pic)
 			std::cout << "Invalid choice! Please enter 0 or 1." << std::endl;
 		}
 
+		// Check if Ctrl+C was pressed
+		if (g_flag) {
+			std::cout << "Ctrl+C was pressed. Exiting..." << std::endl;
+			// Kill the process created by msPaint or IrfanView
+			killProcessByName("mspaint.exe");
+			killProcessByName("i_view64.exe");
+			break;
+		}
+
+
 	} while (choice != 0 && choice != 1); // Continue looping as long as choice is not 0 or 1
 
+}
+
+BOOL __stdcall AlbumManager::console_ctrl_handler(DWORD ctrl_type)
+{
+	if (ctrl_type == CTRL_C_EVENT) {
+		g_flag = true;
+		return TRUE; // Indicate that the event was handled
+	}
+	return FALSE; // Indicate that the event was not handled
 }
 
 void AlbumManager::tagUserInPicture()

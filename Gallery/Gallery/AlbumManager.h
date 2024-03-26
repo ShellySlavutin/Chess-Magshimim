@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <vector>
-#include <Windows.h>
+#include <string.h>
+
+#include "Terminator.h"
 #include "Constants.h"
 #include "MemoryAccess.h"
 #include "Album.h"
@@ -17,6 +19,7 @@ public:
 	using handler_func_t = void (AlbumManager::*)(void);    
 
 private:
+
     int m_nextPictureId{};
     int m_nextUserId{};
     std::string m_currentAlbumName{};
@@ -36,8 +39,10 @@ private:
 	void addPictureToAlbum();
 	void removePictureFromAlbum();
 	void listPicturesInAlbum();
+
 	void showPicture();
 	void openPictureThroughApp(Picture pic);
+	static BOOL WINAPI console_ctrl_handler(DWORD ctrl_type);
 
 	// tags related
 	void tagUserInPicture();
