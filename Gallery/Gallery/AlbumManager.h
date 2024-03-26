@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <vector>
+#include <Windows.h>
 #include "Constants.h"
 #include "MemoryAccess.h"
 #include "Album.h"
@@ -36,6 +37,7 @@ private:
 	void removePictureFromAlbum();
 	void listPicturesInAlbum();
 	void showPicture();
+	void openPictureThroughApp(Picture pic);
 
 	// tags related
 	void tagUserInPicture();

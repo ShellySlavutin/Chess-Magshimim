@@ -202,11 +202,60 @@ void AlbumManager::showPicture()
 	if ( !fileExistsOnDisk(pic.getPath()) ) {
 		throw MyException("Error: Can't open <" + picName+ "> since it doesnt exist on disk.\n");
 	}
+	else {
+		// Open the picture using one of the choices by the user
+		
+
+	}
 
 	// Bad practice!!!
 	// Can lead to privileges escalation
 	// You will replace it on WinApi Lab(bonus)
-	system(pic.getPath().c_str()); 
+}
+
+void AlbumManager::openPictureThroughApp(Picture pic)
+{
+	int choice = -1; 
+
+	STARTUPINFOA info = { sizeof(info) };
+	PROCESS_INFORMATION processInfo;
+	std::string p = pic.getPath();
+
+	do {
+		// Prompt the user to enter a choice
+		std::cout << "Enter 0 to open picture through msPaint " << std::endl
+			<< "Enter 1 to open through IrfanView 64" << std::endl;
+		std::cin >> choice;
+
+		if (choice == 0) {
+			// Open the picture through msPaint
+			std::cout << "Opening the picture through msPaint..." << std::endl;
+			std::string cmd = "C:\\Windows\\system32\\mspaint.exe \"" + p + "\"";
+			if (CreateProcessA(NULL, const_cast<LPSTR>(cmd.c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &info, &processInfo))
+			{
+				WaitForSingleObject(processInfo.hProcess, INFINITE);
+				CloseHandle(processInfo.hProcess);
+				CloseHandle(processInfo.hThread);
+			}
+		}
+		else if (choice == 1) {
+			// Open the picture through IrfanView 64
+			std::cout << "Opening the picture through IrfanView 64..." << std::endl;
+			std::string cmd = "C:\\Program Files\\IrfanView\\i_view64.exe \"" + p + "\"";
+			if (CreateProcessA(NULL, const_cast<LPSTR>(cmd.c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &info, &processInfo))
+			{
+				WaitForSingleObject(processInfo.hProcess, INFINITE);
+				CloseHandle(processInfo.hProcess);
+				CloseHandle(processInfo.hThread);
+			}
+		}
+		else {
+			// Invalid choice
+			std::cout << "Invalid choice! Please enter 0 or 1." << std::endl;
+		}
+
+	} while (choice != 0 && choice != 1); // Continue looping as long as choice is not 0 or 1
+
 }
 
 void AlbumManager::tagUserInPicture()
