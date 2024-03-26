@@ -82,6 +82,11 @@ std::list<Picture> Album::getPictures() const
 	return m_pictures;
 }
 
+void Album::setPictures(std::list<Picture>& pics)
+{
+	this->m_pictures = pics;
+}
+
 void Album::untagUserInAlbum(int userId)
 {
 	for(auto& picture: m_pictures) {

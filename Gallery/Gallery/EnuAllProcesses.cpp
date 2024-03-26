@@ -44,41 +44,41 @@ void printProcessNameAndID(DWORD processID)
 
 	CloseHandle(hProcess);
 }
-
-int main(void)
-{
-	DWORD aProcesses[1024], cbNeeded, cProcesses;
-	unsigned int i;
-
-	/*
-	Note that both EnumProcesses requires by its MSDN page
-	to include the header file <psapi.h>
-	*/
-
-	// Get the list of process identifiers.
-
-	if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
-	{
-		cout << "Error getting the process list (" << GetLastError() << ")" << endl;
-		return 1;
-	}
-
-	// Calculate how many process identifiers were returned.
-
-	cProcesses = cbNeeded / sizeof(DWORD);
-
-	// Print the name and process identifier for each process.
-
-	for (i = 0; i < cProcesses; i++)
-	{
-		if (aProcesses[i] != 0)
-		{
-			printProcessNameAndID(aProcesses[i]);
-		}
-	}
-
-	getchar();
-	return 0;
-}
-
-
+//
+//int main(void)
+//{
+//	DWORD aProcesses[1024], cbNeeded, cProcesses;
+//	unsigned int i;
+//
+//	/*
+//	Note that both EnumProcesses requires by its MSDN page
+//	to include the header file <psapi.h>
+//	*/
+//
+//	// Get the list of process identifiers.
+//
+//	if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded))
+//	{
+//		cout << "Error getting the process list (" << GetLastError() << ")" << endl;
+//		return 1;
+//	}
+//
+//	// Calculate how many process identifiers were returned.
+//
+//	cProcesses = cbNeeded / sizeof(DWORD);
+//
+//	// Print the name and process identifier for each process.
+//
+//	for (i = 0; i < cProcesses; i++)
+//	{
+//		if (aProcesses[i] != 0)
+//		{
+//			printProcessNameAndID(aProcesses[i]);
+//		}
+//	}
+//
+//	getchar();
+//	return 0;
+//}
+//
+//

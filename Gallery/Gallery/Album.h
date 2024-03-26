@@ -30,6 +30,7 @@ public:
 
 	Picture getPicture(const std::string& name) const;
 	std::list<Picture> getPictures() const;
+	void setPictures(std::list<Picture>& pics);
 
 	void untagUserInAlbum(int userId);
 	void tagUserInAlbum(int userId);

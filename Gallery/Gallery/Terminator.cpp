@@ -37,9 +37,9 @@ int killProcessByName(const char *filename)
 	CloseHandle(hSnapShot);
 	return retValue;
 }
-int main()
-{
-	printf("%d\n", killProcessByName("notepad.exe"));
-	system("pause");
-	return 0;
-}
+//int main()
+//{
+//	printf("%d\n", killProcessByName("notepad.exe"));
+//	system("pause");
+//	return 0;
+//}
