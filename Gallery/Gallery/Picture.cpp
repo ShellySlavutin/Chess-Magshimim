@@ -102,6 +102,11 @@ int Picture::getTagsCount() const
 	return m_usersTags.size();
 }
 
+void Picture::setTags(std::set<int> newTags)
+{
+	this->m_usersTags = newTags;
+}
+
 const std::set<int>& Picture::getUserTags() const
 {
 	return m_usersTags;
