@@ -18,7 +18,7 @@ public:
 
 	using handler_func_t = void (AlbumManager::*)(void);    
 
-	//static bool processOpenFlag;
+	static bool processOpenFlag;
 
 private:
     int m_nextPictureId{};
@@ -43,7 +43,7 @@ private:
 
 	void showPicture();
 	void openPictureThroughApp(Picture pic);
-	//static BOOL WINAPI console_ctrl_handler(DWORD ctrl_type);
+	static BOOL WINAPI console_ctrl_handler(DWORD ctrl_type);
 
 	// tags related
 	void tagUserInPicture();

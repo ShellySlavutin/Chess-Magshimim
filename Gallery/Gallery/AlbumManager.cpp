@@ -208,268 +208,73 @@ void AlbumManager::showPicture()
 		openPictureThroughApp(pic);
 	}
 }
-//
-//#include <csignal>
-//#include <iostream>
-//#include <string>
-//#include <thread>
-//#include <atomic>
-//#include <windows.h>
-//
-//// Declaration of processOpenFlag
-//static std::atomic<bool> processOpenFlag(true);
-//
-//// Implementation of console control handler
-//static void sigint_handler(int signal) {
-//	if (signal == SIGINT) {
-//		// Handle Ctrl+C event
-//		processOpenFlag = false;
-//	}
-//}
-//
-//// Implementation of openPictureThroughApp
-//void AlbumManager::openPictureThroughApp(Picture pic) {
-//	int choice = -1;
-//
-//	STARTUPINFOA info = { sizeof(info) };
-//	PROCESS_INFORMATION processInfo;
-//	std::string p = pic.getPath();
-//
-//	std::string cmd;
-//
-//	// Set the signal handler for SIGINT (Ctrl+C)
-//	std::signal(SIGINT, sigint_handler);
-//
-//	do {
-//		// Prompt the user to enter a choice
-//		std::cout << "Enter 0 to open picture through msPaint " << std::endl
-//			<< "Enter 1 to open through IrfanView 64" << std::endl;
-//		std::cin >> choice;
-//	} while (choice != 0 && choice != 1); // Continue looping as long as choice is not 0 or 1
-//
-//	if (choice == 0) {
-//		// Open the picture through msPaint
-//		std::cout << "Opening the picture through msPaint..." << std::endl;
-//		cmd = "C:\\Windows\\system32\\mspaint.exe \"" + p + "\"";
-//	}
-//	else if (choice == 1) {
-//		// Open the picture through IrfanView 64
-//		std::cout << "Opening the picture through IrfanView 64..." << std::endl;
-//		cmd = "C:\\Program Files\\IrfanView\\i_view64.exe \"" + p + "\"";
-//	}
-//
-//	if (CreateProcessA(NULL, const_cast<LPSTR>(cmd.c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &info, &processInfo)) {
-//		// Wait until the process flag becomes false
-//		while (processOpenFlag) {
-//			// Sleep for a short duration to avoid busy-waiting
-//			Sleep(100);
-//		}
-//		std::cout << "Closing..." << std::endl;
-//		// killProcessByName(choice ? "mspaint.exe" : "i_view64.exe");
-//		CloseHandle(processInfo.hProcess);
-//		CloseHandle(processInfo.hThread);
-//	}
-//}
-//
 
-//// Declaration of processOpenFlag
-//bool AlbumManager::processOpenFlag = true;
-//
-//// Implementation of console control handler
-//BOOL WINAPI AlbumManager::console_ctrl_handler(DWORD fdwCtrlType) {
-//	if (fdwCtrlType == CTRL_C_EVENT) {
-//		// Handle Ctrl+C event
-//		processOpenFlag = false;
-//		return TRUE;
-//	}
-//	return FALSE;
-//}
-//
-//// Implementation of openPictureThroughApp
-//void AlbumManager::openPictureThroughApp(Picture pic)
-//{
-//	int choice = -1;
-//
-//	STARTUPINFOA info = { sizeof(info) };
-//	PROCESS_INFORMATION processInfo;
-//	std::string p = pic.getPath();
-//
-//	std::string cmd;
-//
-//	// Set the console control handler to handle Ctrl+C
-//	if (!SetConsoleCtrlHandler(console_ctrl_handler, TRUE)) {
-//		throw MyException("Error setting console control handler.");
-//	}
-//
-//	do {
-//		// Prompt the user to enter a choice
-//		std::cout << "Enter 0 to open picture through msPaint " << std::endl
-//			<< "Enter 1 to open through IrfanView 64" << std::endl;
-//		std::cin >> choice;
-//	} while (choice != 0 && choice != 1); // Continue looping as long as choice is not 0 or 1
-//
-//	if (choice == 0) {
-//		// Open the picture through msPaint
-//		std::cout << "Opening the picture through msPaint..." << std::endl;
-//		cmd = "C:\\Windows\\system32\\mspaint.exe \"" + p + "\"";
-//	}
-//	else if (choice == 1) {
-//		// Open the picture through IrfanView 64
-//		std::cout << "Opening the picture through IrfanView 64..." << std::endl;
-//		cmd = "C:\\Program Files\\IrfanView\\i_view64.exe \"" + p + "\"";
-//	}
-//
-//	if (CreateProcessA(NULL, const_cast<LPSTR>(cmd.c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &info, &processInfo))
-//	{
-//		// Wait until the process flag becomes false
-//		while (processOpenFlag) {
-//			// Sleep for a short duration to avoid busy-waiting
-//			Sleep(100);
-//		}
-//		std::cout << "Closing..." << std::endl;
-//		killProcessByName(choice ? "mspaint.exe" : "i_view64.exe");
-//		CloseHandle(processInfo.hProcess);
-//		CloseHandle(processInfo.hThread);
-//	}
-//}
+// Declaration of processOpenFlag
+bool AlbumManager::processOpenFlag = true;
 
+// Implementation of console control handler
+BOOL WINAPI AlbumManager::console_ctrl_handler(DWORD fdwCtrlType) {
+	if (fdwCtrlType == CTRL_C_EVENT) {
+		// Handle Ctrl+C event
+		processOpenFlag = false;
+		return TRUE;
+	}
+	return FALSE;
+}
 
-//
-//#include <windows.h>
-//#include <iostream>
-//#include <thread>
-//#include <atomic>
-//
-//// Global variable to indicate whether Ctrl+C was pressed
-//std::atomic<bool> g_flag(false);
-//
-//// Function to handle Ctrl+C events
-//BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
-//{
-//	if (ctrl_type == CTRL_C_EVENT) {
-//		g_flag = true;
-//		return TRUE; // Indicate that the event was handled
-//	}
-//	return FALSE; // Indicate that the event was not handled
-//}
-//
-//// Function to open the picture through the specified application
-//void AlbumManager::openPictureThroughApp(Picture pic)
-//{
-//	std::string p = pic.getPath();
-//
-//	// Set the console control handler to handle Ctrl+C
-//	if (!SetConsoleCtrlHandler(console_ctrl_handler, TRUE)) {
-//		throw MyException("Error setting console control handler.");
-//	}
-//
-//	// Thread to wait for user input
-//	std::thread userInputThread([&]() {
-//		int choice = -1;
-//		do {
-//			// Prompt the user to enter a choice
-//			std::cout << "Enter 0 to open picture through msPaint " << std::endl
-//				<< "Enter 1 to open through IrfanView 64" << std::endl;
-//			std::cin >> choice;
-//
-//			if (choice == 0) {
-//				// Open the picture through msPaint
-//				std::cout << "Opening the picture through msPaint..." << std::endl;
-//				std::string cmd = "C:\\Windows\\system32\\mspaint.exe \"" + p + "\"";
-//				system(cmd.c_str());
-//			}
-//			else if (choice == 1) {
-//				// Open the picture through IrfanView 64
-//				std::cout << "Opening the picture through IrfanView 64..." << std::endl;
-//				std::string cmd = "C:\\Program Files\\IrfanView\\i_view64.exe \"" + p + "\"";
-//				system(cmd.c_str());
-//			}
-//			else {
-//				// Invalid choice
-//				std::cout << "Invalid choice! Please enter 0 or 1." << std::endl;
-//			}
-//		} while (choice != 0 && choice != 1);
-//
-//		std::cout << "Exiting userInputThread..." << std::endl;
-//		});
-//
-//	// Thread to check for Ctrl+C events
-//	std::thread ctrlCThread([&]() {
-//		while (!g_flag) {
-//			// Sleep for a short duration to avoid busy-waiting
-//			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//		}
-//
-//		std::cout << "Ctrl+C was pressed. Exiting..." << std::endl;
-//		// Kill the process created by msPaint or IrfanView
-//		killProcessByName("mspaint.exe");
-//		killProcessByName("i_view64.exe");
-//
-//		std::cout << "Exiting ctrlCThread..." << std::endl;
-//		});
-//
-//	// Wait for both threads to finish
-//	userInputThread.join();
-//	ctrlCThread.join();
-//}
+// Implementation of openPictureThroughApp
+void AlbumManager::openPictureThroughApp(Picture pic)
+{
+	int choice = -1;
 
-//bool AlbumManager::processOpenFlag = true; // Definition of the static member variable
-//
-//BOOL WINAPI AlbumManager::console_ctrl_handler(DWORD fdwCtrlType) {
-//	switch (fdwCtrlType) {
-//	case CTRL_C_EVENT:
-//		// Terminate the process
-//		processOpenFlag = false;
-//		return TRUE;
-//		break;
-//	default:
-//		return FALSE;
-//	}
-//	return TRUE;
-//}
-//
-//void AlbumManager::openPictureThroughApp(Picture pic)
-//{
-//	int choice = -1;
-//
-//	STARTUPINFOA info = { sizeof(info) };
-//	PROCESS_INFORMATION processInfo;
-//	std::string p = pic.getPath();
-//
-//	std::string cmd;
-//
-//	// Set the console control handler to handle Ctrl+C
-//	if (!SetConsoleCtrlHandler(console_ctrl_handler, TRUE)) {
-//		throw MyException("Error setting console control handler.");
-//	}
-//
-//	do {
-//		// Prompt the user to enter a choice
-//		std::cout << "Enter 0 to open picture through msPaint " << std::endl
-//			<< "Enter 1 to open through IrfanView 64" << std::endl;
-//		std::cin >> choice;
-//	} while (choice != 0 && choice != 1); // Continue looping as long as choice is not 0 or 1
-//
-//	if (choice == 0) {
-//		// Open the picture through msPaint
-//		std::cout << "Opening the picture through msPaint..." << std::endl;
-//		cmd = "C:\\Windows\\system32\\mspaint.exe \"" + p + "\"";
-//	}
-//	else if (choice == 1) {
-//		// Open the picture through IrfanView 64
-//		std::cout << "Opening the picture through IrfanView 64..." << std::endl;
-//		cmd = "C:\\Program Files\\IrfanView\\i_view64.exe \"" + p + "\"";
-//	}
-//
-//	if (CreateProcessA(NULL, const_cast<LPSTR>(cmd.c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &info, &processInfo))
-//	{
-//		while (processOpenFlag); // Wait until the process flag becomes false
-//		std::cout << "Closing..." << std::endl;
-//		killProcessByName(choice ? "mspaint.exe" : "i_view64.exe");
-//		CloseHandle(processInfo.hProcess);
-//		CloseHandle(processInfo.hThread);
-//	}
-//}
+	STARTUPINFOA info = { sizeof(info) };
+	PROCESS_INFORMATION processInfo;
+	std::string p = pic.getPath();
+
+	std::string cmd;
+
+	// Set the console control handler to handle Ctrl+C
+	if (!SetConsoleCtrlHandler(console_ctrl_handler, true)) {
+		throw MyException("Error setting console control handler.");
+	}
+
+	do {
+		// Prompt the user to enter a choice
+		std::cout << "Enter 0 to open picture through msPaint " << std::endl
+			<< "Enter 1 to open through IrfanView 64" << std::endl;
+		std::cin >> choice;
+	} while (choice != 0 && choice != 1); // Continue looping as long as choice is not 0 or 1
+
+	if (choice == 0) {
+		// Open the picture through msPaint
+		std::cout << "Opening the picture through msPaint..." << std::endl;
+		cmd = "C:\\Windows\\system32\\mspaint.exe \"" + p + "\"";
+	}
+	else if (choice == 1) {
+		// Open the picture through IrfanView 64
+		std::cout << "Opening the picture through IrfanView 64..." << std::endl;
+		cmd = "C:\\Program Files\\IrfanView\\i_view64.exe \"" + p + "\"";
+	}
+
+	if (CreateProcessA(NULL, const_cast<LPSTR>(cmd.c_str()), NULL, NULL, FALSE, 0, NULL, NULL, &info, &processInfo))
+	{
+		// Wait until the process flag becomes false
+		while (processOpenFlag) {
+			// Sleep for a short duration to avoid busy-waiting
+			Sleep(100);
+		}
+		std::cout << "Closing..." << std::endl;
+
+		TerminateProcess(processInfo.hProcess, 0);
+		CloseHandle(processInfo.hProcess);
+		CloseHandle(processInfo.hThread);
+		
+		// Close the signal
+		if (!SetConsoleCtrlHandler(console_ctrl_handler, false)) {
+			throw MyException("Error setting console control handler.");
+		}
+	}
+}
 
 void AlbumManager::tagUserInPicture()
 {
