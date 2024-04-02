@@ -11,6 +11,7 @@
 #include <io.h>
 #include <string>
 #include <list>
+#include <set>
 
 #define DB_FILE_NAME "galleryDB.sqlite"
 
@@ -21,13 +22,13 @@
 #define TAGS_TABLE "Tags"
 
 // Columns names
-#define NAME_COLUMN "name"
-#define ID_COLUMN "id"
-#define LOCATION_COLUMN "location"
-#define CREATION_DATE_COLUMN "Creation_date"
-#define PICTURE_ID_COLUMN "picture_id"
-#define ALBUM_ID_COLUMN "album_id"
-#define USER_ID_COLUMN "user_id"
+#define NAME_COLUMN "NAME"
+#define ID_COLUMN "ID"
+#define LOCATION_COLUMN "LOCATION"
+#define CREATION_DATE_COLUMN "CREATION_DATE"
+#define PICTURE_ID_COLUMN "PICTURE_ID"
+#define ALBUM_ID_COLUMN "ALBUM_ID"
+#define USER_ID_COLUMN "USER_ID"
 
 
 class DatabaseAccess : public IDataAccess
@@ -52,6 +53,7 @@ public:
 
 	// picture related
 	Picture getPictureFromAlbum(const std::string& albumName, const std::string& pictureName);
+	std::list<Picture> getPicturesFromAlbum(int albumId);
 
 	void addPictureToAlbumByName(const std::string& albumName, const Picture& picture) override;
 	void removePictureFromAlbumByName(const std::string& albumName, const std::string& pictureName) override;
@@ -60,6 +62,8 @@ public:
 
 	void tagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId) override;
 	void untagUserInPicture(const std::string& albumName, const std::string& pictureName, int userId) override;
+
+	std::set<int> getTagsByPic(const Picture& pic);
 
 	// user related
 	void printUsers() override;
@@ -81,7 +85,7 @@ public:
 	std::list<Picture> getTaggedPicturesOfUser(const User& user) override;
 
 	bool open() override;
-	void close() override {};
+	void close() override;
 	void clear() override;
 
 private:
@@ -89,8 +93,8 @@ private:
 	static int getAlbumsCallback(void* voidAlbum, int columnCount, char** data, char** columnName);
 	static int getUsersCallback(void* voidUser, int columnCount, char** data, char** columnName);
 	static int getPicturesCallback(void* voidPicture, int columnCount, char** data, char** columnName);
-	static int getUsersCallback(void* voidPicture, int columnCount, char** data, char** columnName);
 	static int getIntCallback(void* voidInt, int columnCount, char** data, char** columnName);
+	static int getTagsCallback(void* voidTags, int len, char** data, char** columnName);
 
 	// Execute queries - use those functions instead of repeating the same lines
 	void executeSqlQuery(const char* sql);
