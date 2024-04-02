@@ -68,6 +68,21 @@ int DatabaseAccess::getIntCallback(void* voidInt, int columnCount, char** data, 
     return 0;
 }
 
+int DatabaseAccess::getTagsCallback(void* voidTags, int len, char** data, char** columnName)
+{
+    auto tags = static_cast<std::set<int>*>(voidTags);
+
+    for (int i = 0; i < len; ++i)
+    {
+        if (std::string(columnName[i]) == USER_ID_COLUMN)
+        {
+            tags->insert(atoi(data[i]));
+            break;
+        }
+    }
+    return 0;
+}
+
 int DatabaseAccess::getPicturesCallback(void* voidPicture, int columnCount, char** data, char** columnName)
 {
     auto pics = static_cast<std::list<Picture>*>(voidPicture);
@@ -254,6 +269,11 @@ std::list<Picture> DatabaseAccess::getTaggedPicturesOfUser(const User& user)
     {
         throw MyException("No pictures found");
     }
+
+    for (auto& pic : pictures)
+        pic.setTags(getTagsByPic(pic));
+
+
     return pictures;
 }
 
@@ -262,16 +282,28 @@ std::list<Picture> DatabaseAccess::getTaggedPicturesOfUser(const User& user)
 const Album DatabaseAccess::getAlbumByName(const std::string& albumName)
 {
     std::list<Album> albums = getAlbums();
+    Album foundAlbum;
+    bool found = false;
 
     for (const auto& album : albums) {
         if (album.getName() == albumName) // Assume the first album with the name wanted is the desired Album
         {
-            return album;
+            foundAlbum = album;
+            found = true;
         }
     }
+    if (!found)
+    {
+        // Didn't find a matching album
+        throw ItemNotFoundException("Could not find the album", albumName);
+    }
 
-    // Didn't find a matching album
-    throw ItemNotFoundException("Could not find the album", albumName);
+    for (const auto& pic : getPicturesFromAlbum(foundAlbum.getId()))
+    {
+        foundAlbum.addPicture(pic);
+    }
+
+    return foundAlbum;
 }
 
 
@@ -418,6 +450,14 @@ Picture DatabaseAccess::getPictureFromAlbum(const std::string& albumName, const 
         }
         else
         {
+            std::set<int> tagsOfPic;
+            std::string getTagsOfPic = "SELECT USER_ID FROM TAGS WHERE PICTURE_ID = " + std::to_string(pics.front().getId());
+
+            executeSqlQueryWithCallback(getTagsOfPic.c_str(), getTagsCallback, &tagsOfPic);
+
+            for (auto& userIterator : tagsOfPic)
+                pics.front().tagUser(userIterator);
+
             return pics.front();
         }
     }
@@ -426,6 +466,25 @@ Picture DatabaseAccess::getPictureFromAlbum(const std::string& albumName, const 
         std::cerr << e.what() << std::endl;
         return Picture();
     }
+}
+
+std::list<Picture> DatabaseAccess::getPicturesFromAlbum(int albumId)
+{
+    std::string getPicturesOfAlbum = "SELECT * FROM PICTURES WHERE ALBUM_ID = " + std::to_string(albumId);
+    std::list<Picture> pics;
+
+    executeSqlQueryWithCallback(getPicturesOfAlbum.c_str(), getPicturesCallback, &pics);
+
+    for (auto& pic : pics) {
+        std::set<int> tagsOfPic;
+        std::string getTagsOfPic = "SELECT USER_ID FROM TAGS WHERE PICTURE_ID = " + std::to_string(pic.getId());
+
+        executeSqlQueryWithCallback(getTagsOfPic.c_str(), getTagsCallback, &tagsOfPic);
+
+        for (auto& userIterator : tagsOfPic)
+            pic.tagUser(userIterator);
+    }
+    return pics;
 }
 
 void DatabaseAccess::addPictureToAlbumByName(const std::string& albumName, const Picture& picture)
@@ -452,26 +511,19 @@ void DatabaseAccess::addPictureToAlbumByName(const std::string& albumName, const
 
 void DatabaseAccess::removePictureFromAlbumByName(const std::string& albumName, const std::string& pictureName)
 {
-    std::string sql;
-
     try
     {
-        // Start transaction
-        executeSqlQuery("BEGIN;");
-
         // Find the user ID based on the album name
         Album album = getAlbumByName(albumName);
         int userId = album.getOwnerId();
 
-        sql = "DELETE FROM PICTURES WHERE "
+        std::string removePictureStatment = "DELETE FROM PICTURES WHERE "
             " ALBUM_ID = " + std::to_string(album.getId()) + " AND "
             " NAME = '" + pictureName + "';";
 
-        executeSqlQuery(sql.c_str());
+        executeSqlQuery(removePictureStatment.c_str());
 
         removeTagsOfPicture(albumName, pictureName);
-
-        executeSqlQuery("END;");
     }
     catch (const ItemNotFoundException& e) {
         std::cerr << e.what() << std::endl;
@@ -517,7 +569,17 @@ void DatabaseAccess::untagUserInPicture(const std::string& albumName, const std:
 
 }
 
-//USER METHODS : 
+std::set<int> DatabaseAccess::getTagsByPic(const Picture& pic)
+{
+    std::set<int> tags;
+    std::string getTagsByPicStatement = "SELECT * FROM Tags WHERE PICTURE_ID = " + std::to_string(pic.getId()) + ";";
+
+    executeSqlQueryWithCallback(getTagsByPicStatement.c_str(), getTagsCallback, &tags);
+
+    return tags;
+}
+
+//USER METHODS :  
 
 void DatabaseAccess::printUsers()
 {
@@ -544,9 +606,6 @@ void DatabaseAccess::createUser(User& user)
 
 void DatabaseAccess::deleteUser(const User& user)
 {
-    // Begin transaction
-    executeSqlQuery("BEGIN TRANSACTION;");
-
     // Construct SQL statement
     std::string deleteUserStatement =
         "DELETE FROM TAGS "
@@ -560,9 +619,6 @@ void DatabaseAccess::deleteUser(const User& user)
 
     // Execute SQL statement
     executeSqlQuery(deleteUserStatement.c_str());
-
-    // Commit transaction
-    executeSqlQuery("COMMIT;");
 }
 
 bool DatabaseAccess::doesUserExists(int userId)
@@ -660,5 +716,10 @@ int DatabaseAccess::countTagsOfUser(const User& user)
 
 float DatabaseAccess::averageTagsPerAlbumOfUser(const User& user)
 {
-    return countTagsOfUser(user) / countAlbumsTaggedOfUser(user);
+    int AlbumsTaggedOfUser = countAlbumsTaggedOfUser(user);
+    if (AlbumsTaggedOfUser == 0)
+    {
+        return 0; // Do this to avoid div by 0
+    }
+    return countTagsOfUser(user) / float(AlbumsTaggedOfUser);
 }

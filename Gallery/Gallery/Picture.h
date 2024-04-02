@@ -31,7 +31,9 @@ public:
 	void tagUser(int userId);
 	void untagUser(const User& user);
 	void untagUser(int userId);
+
 	int getTagsCount() const;
+	void setTags(std::set<int> newTags);
 
 	const std::set<int>& getUserTags() const;
 
