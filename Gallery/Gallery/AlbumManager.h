@@ -1,5 +1,8 @@
 ﻿#pragma once
 #include <vector>
+#include <string.h>
+
+#include "Terminator.h"
 #include "Constants.h"
 #include "MemoryAccess.h"
 #include "DatabaseAccess.h"
@@ -15,6 +18,8 @@ public:
 	void printHelp() const;
 
 	using handler_func_t = void (AlbumManager::*)(void);    
+
+	static bool processOpenFlag;
 
 private:
     int m_nextPictureId{};
@@ -36,7 +41,10 @@ private:
 	void addPictureToAlbum();
 	void removePictureFromAlbum();
 	void listPicturesInAlbum();
+
 	void showPicture();
+	void openPictureThroughApp(Picture pic);
+	static BOOL WINAPI console_ctrl_handler(DWORD ctrl_type);
 
 	// tags related
 	void tagUserInPicture();

@@ -80,6 +80,12 @@
     <ClCompile Include="DatabaseAccess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Terminator.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Terminator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Gallery.VC.db" />

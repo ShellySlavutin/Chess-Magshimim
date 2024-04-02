@@ -105,6 +105,8 @@
     <ClCompile Include="MemoryAccess.cpp" />
     <ClCompile Include="Picture.cpp" />
     <ClCompile Include="sqlite3.c" />
+    <ClCompile Include="Terminator.cpp" />
+    <ClCompile Include="Terminator.h" />
     <ClCompile Include="User.cpp" />
     <ClCompile Include="Gallery.cpp" />
   </ItemGroup>

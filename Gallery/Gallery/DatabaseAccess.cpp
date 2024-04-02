@@ -392,7 +392,21 @@ bool DatabaseAccess::doesAlbumExists(const std::string& albumName, int userId)
 
 Album DatabaseAccess::openAlbum(const std::string& albumName)
 {
-    return getAlbumByName(albumName);
+    Album album = getAlbumByName(albumName); // CHECK LATER
+
+    // Get the pictures of the album
+
+    std::list<Picture> pics;
+    std::string sqlGetPic =
+        "SELECT * FROM PICTURES "
+        " WHERE NAME = " + albumName + "';";
+
+    executeSqlQueryWithCallback(sqlGetPic.c_str(), getPicturesCallback, &pics);
+
+    album.setPictures(pics);
+
+    return album;
+
 }
 
 void DatabaseAccess::closeAlbum(Album& pAlbum)
